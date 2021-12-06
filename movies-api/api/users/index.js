@@ -19,8 +19,13 @@ router.post('/',asyncHandler( async (req, res, next) => {
       return next();
     }
     if (req.query.action === 'register') {
+      const passwordRule = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{5,}$/;
+      if(passwordRule.test(req.body.password)){
       await User.create(req.body);
       res.status(201).json({code: 201, msg: 'Successful created new user.'});
+      }else{
+        res.status(401).json({code: 401, msg: 'Failed to create new user.'});
+      }
     } else {
       const user = await User.findByUserName(req.body.username);
         if (!user) return res.status(401).json({ code: 401, msg: 'Authentication failed. User not found.' });
@@ -54,9 +59,13 @@ router.post('/:userName/favourites', asyncHandler(async (req, res) => {
     const userName = req.params.userName;
     const movie = await movieModel.findByMovieDBId(newFavourite);
     const user = await User.findByUserName(userName);
+if(!user.favourites.includes(movie._id)){
     await user.favourites.push(movie._id);
     await user.save(); 
-    res.status(201).json(user); 
+    res.status(201).json(user);}
+else{
+  res.status(401).json({code: 401, msg: 'The movie already in the list.'});
+}
   }));
 
   router.get('/:userName/favourites', asyncHandler( async (req, res) => {
